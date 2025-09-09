@@ -1,5 +1,3 @@
-# api/logic.py
-
 import pandas as pd
 from sodapy import Socrata
 
