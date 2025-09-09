@@ -33,10 +33,8 @@ def get_covid_data(departamento: str, limite: int):
 
         client = Socrata(API_DOMAIN, None)
 
-        # --- LÍNEA CORREGIDA ---
         # El nombre de campo correcto para el código DIVIPOLA del departamento es 'departamento'.
         where_clause = f"departamento = '{codigo_depto}'"
-        # --- FIN DE LA CORRECCIÓN ---
 
         results = client.get(
             DATASET_ID,
