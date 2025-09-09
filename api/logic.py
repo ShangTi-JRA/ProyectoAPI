@@ -1,43 +1,54 @@
 import pandas as pd
 from sodapy import Socrata
 
-# El identificador del conjunto de datos de COVID-19 en Colombia
+# --- MAPA DE TRADUCCIÓN DE NOMBRE DE DEPARTAMENTO A CÓDIGO OFICIAL DIVIPOLA ---
+DEPARTAMENTO_A_CODIGO = {
+    'AMAZONAS': '91', 'ANTIOQUIA': '05', 'ARAUCA': '81', 'ATLANTICO': '08',
+    'BARRANQUILLA': '08', 'BOGOTA D.C.': '11', 'BOLIVAR': '13', 'BOYACA': '15',
+    'BUENAVENTURA': '76', 'CALDAS': '17', 'CAQUETA': '18', 'CARTAGENA': '13',
+    'CASANARE': '85', 'CAUCA': '19', 'CESAR': '20', 'CHOCO': '27',
+    'CORDOBA': '23', 'CUNDINAMARCA': '25', 'GUAINIA': '94', 'GUAVIARE': '95',
+    'HUILA': '41', 'LA GUAJIRA': '44', 'MAGDALENA': '47', 'META': '50',
+    'NARIÑO': '52', 'NORTE DE SANTANDER': '54', 'PUTUMAYO': '86', 'QUINDIO': '63',
+    'RISARALDA': '66', 'SAN ANDRES Y PROVIDENCIA': '88', 'SANTA MARTA': '47',
+    'SANTANDER': '68', 'SUCRE': '70', 'TOLIMA': '73', 'VALLE DEL CAUCA': '76',
+    'VAUPES': '97', 'VICHADA': '99'
+}
+
 DATASET_ID = "gt2j-8ykr"
-# El dominio del portal de Datos Abiertos
 API_DOMAIN = "www.datos.gov.co"
 
 def get_covid_data(departamento: str, limite: int):
     """
     Consulta la API de Datos Abiertos para obtener casos de COVID-19.
-
-    Args:
-        departamento (str): El nombre del departamento a consultar.
-        limite (int): El número máximo de registros a obtener.
-
-    Returns:
-        pandas.DataFrame: Un DataFrame con los datos obtenidos o un DataFrame vacío si no hay resultados.
+    Utiliza el código DIVIPOLA del departamento para una consulta robusta.
     """
     try:
-        # Se crea un cliente para la API sin autenticación (para datos públicos)
+        departamento_upper = departamento.upper()
+        codigo_depto = DEPARTAMENTO_A_CODIGO.get(departamento_upper)
+
+        if not codigo_depto:
+            print(f"Error: El departamento '{departamento}' no es un nombre válido.")
+            return pd.DataFrame()
+
         client = Socrata(API_DOMAIN, None)
 
-        # La API espera el nombre del departamento en mayúsculas
-        departamento_upper = departamento.upper()
+        # --- LÍNEA CORREGIDA ---
+        # El nombre de campo correcto para el código DIVIPOLA del departamento es 'departamento'.
+        where_clause = f"departamento = '{codigo_depto}'"
+        # --- FIN DE LA CORRECCIÓN ---
 
-        # Se realiza la consulta (get) al dataset usando el ID
-        # El parámetro de la API para el nombre del departamento es 'departamento_nom'
         results = client.get(
             DATASET_ID,
             limit=limite,
-            departamento_nom=departamento_upper
+            where=where_clause
         )
 
-        # Se convierten los resultados (una lista de diccionarios) en un DataFrame de pandas
         if results:
             return pd.DataFrame.from_records(results)
         else:
-            return pd.DataFrame() # Retorna un DataFrame vacío si no hay resultados
+            return pd.DataFrame()
 
     except Exception as e:
         print(f"Ocurrió un error al consultar la API: {e}")
-        return pd.DataFrame() # Retorna DataFrame vacío en caso de error
+        return pd.DataFrame()
